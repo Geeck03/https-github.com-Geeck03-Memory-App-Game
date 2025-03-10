@@ -52,10 +52,10 @@ struct MainGameView: View {
     func createCardGrid(screenSize: CGSize) -> some View {
         let gridConfig = getGridConfiguration (for: screenSize)
         let cardWidth = gridConfig.cardWidth
-        let ros = gridConfig.rows
+        let rows = gridConfig.rows
         
         return LazyVGrid(columns: gridConfig.columns, spacing: 10) {
-            ForEach(card: card, viewModel.card) { card in
+            ForEach(viewModel.cards) { card in
                 CardView(viewModel: viewModel, card: card)
                     .frame(width: cardWidth, height: cardWidth * 1.5)
                     .padding(5)
@@ -66,21 +66,21 @@ struct MainGameView: View {
     
     func getGridConfiguration(for screenSize: CGSize) -> (columns: [GridItem], cardWidth: CGFloat, rows: Int) {
         let isLandScape = deviceOrientation.isLandscape
-        let cardWidth = CGFloat
+        let cardWidth: CGFloat
         
         if isLandScape {
             cardWidth = max(100, screenSize.width / 6)
-        }
-        else {
+        } else {
             cardWidth = max(80, screenSize.width / 4)
         }
         
-        let rows = Int(ScreenSize.height / (cardWidth * 1.5))
+        let rows = Int(screenSize.height / (cardWidth * 1.5))
         let columns = [GridItem(.flexible())]
         
         return (columns, cardWidth, rows)
     }
 }
+
 
 
 #Preview {
