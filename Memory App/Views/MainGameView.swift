@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MainGameView: View {
-    @ObservedObject var gameViewModel = CardGameViewModel()
+    @ObservedObject var viewModel = CardGameViewModel()
     //Tracks the device orientation
     @State private var deviceOrientation: UIDeviceOrientation = UIDevice.current.orientation
     
@@ -16,30 +16,29 @@ struct MainGameView: View {
         GeometryReader { geometry in
             VStack {
                 Color.blue.opacity(0.2)
-                    .edgesIgnoringSafeAreas(.all)
+                    .edgesIgnoringSafeArea(.all)
                 
                 
                 if deviceOrientation.isLandscape {
-                    
-                    
-                    
                     HStack {
                         createCardGrid(screenSize: geometry.size)
-                        ControlPanel(gameViewModel: gameViewModel)
+                        ControlPanelView(viewModel: viewModel)
                     }
                 } else {
                     VStack {
                         createCardGrid(screenSize: geometry.size)
-                        ControlPanel(gameViewModel: gameViewModel)
+                        ControlPanelView(viewModel: viewModel)
                     }
                 }
             }
             .onAppear {
                 UIDevice.current.beginGeneratingDeviceOrientationNotifications()
             }
-            .onChange(of: deviceOrientation) { _ in withAnimation(.spring()) {
-                updateDeviceOrientation()
-            }
+            .onChange(of: deviceOrientation) { _ in
+                withAnimation(.spring()) {
+                    //Animates the transitions when orientation change occurs
+                    updateDeviceOrientation()
+                }
             }
         }
         .onDisappear() {
@@ -50,10 +49,38 @@ struct MainGameView: View {
         deviceOrientation = UIDevice.current.orientation
     }
     
-    func createCardGrid(screenSize: CgSize) -> some View {
+    func createCardGrid(screenSize: CGSize) -> some View {
         let gridConfig = getGridConfiguration (for: screenSize)
-        let cardWidth = gridcc
+        let cardWidth = gridConfig.cardWidth
+        let ros = gridConfig.rows
+        
+        return LazyVGrid(columns: gridConfig.columns, spacing: 10) {
+            ForEach(card: card, viewModel.card) { card in
+                CardView(viewModel: viewModel, card: card)
+                    .frame(width: cardWidth, height: cardWidth * 1.5)
+                    .padding(5)
+            }
+        }
+        .padding()
     }
+    
+    func getGridConfiguration(for screenSize: CGSize) -> (columns: [GridItem], cardWidth: CGFloat, rows: Int) {
+        let isLandScape = deviceOrientation.isLandscape
+        let cardWidth = CGFloat
+        
+        if isLandScape {
+            cardWidth = max(100, screenSize.width / 6)
+        }
+        else {
+            cardWidth = max(80, screenSize.width / 4)
+        }
+        
+        let rows = Int(ScreenSize.height / (cardWidth * 1.5))
+        let columns = [GridItem(.flexible())]
+        
+        return (columns, cardWidth, rows)
+    }
+}
 
 
 #Preview {
